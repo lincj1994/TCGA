@@ -1,31 +1,33 @@
 #Count to FPKM
-##1.»ñµÃÃ¿¸ö»ùÒòËùÓĞÍâÏÔ×Ó³¤¶ÈÖ®ºÍ
+##1.è·å¾—æ¯ä¸ªåŸºå› æ‰€æœ‰å¤–æ˜¾å­é•¿åº¦ä¹‹å’Œ
+###First, download Homo_sapiens.GRCh38.99.gtf from ftp://ftp.ensembl.org/pub/current_gtf/homo_sapiens/
+library(GenomicFeatures)
 txdb <- makeTxDbFromGFF("Homo_sapiens.GRCh38.99.gtf",format="gtf")
 exons_gene <- exonsBy(txdb, by = "gene")
-exons_gene_lens <- lapply(exons_gene,function(x){sum(width(reduce(x)))}) ###ÎªÒ»¸ölist£¬¼ÇÂ¼Ã¿¸ö»ùÒòËùÓĞÍâÏÔ×Ó³¤¶ÈÖ®ºÍ
-exons_gene_lens2 <- data.frame(do.call(rbind,exons_gene_lens2)) ###½«list×ª»»Îªdata.frame
+exons_gene_lens <- lapply(exons_gene,function(x){sum(width(reduce(x)))}) ###ä¸ºä¸€ä¸ªlistï¼Œè®°å½•æ¯ä¸ªåŸºå› æ‰€æœ‰å¤–æ˜¾å­é•¿åº¦ä¹‹å’Œ
+exons_gene_lens2 <- data.frame(do.call(rbind,exons_gene_lens2)) ###å°†listè½¬æ¢ä¸ºdata.frame
 
-##2.½«Ô­±í´ï¾ØÕóÖĞ²»´æÔÚÓÚexons_gene_lensµÄ»ùÒòÌŞ³ı
-###×¢Òâ£¬±í´ï¾ØÕóĞĞÎª»ùÒò£¬ÁĞÎªÑù±¾(56499 x 1203)
+##2.å°†åŸè¡¨è¾¾çŸ©é˜µä¸­ä¸å­˜åœ¨äºexons_gene_lensçš„åŸºå› å‰”é™¤
+###æ³¨æ„ï¼Œè¡¨è¾¾çŸ©é˜µè¡Œä¸ºåŸºå› ï¼Œåˆ—ä¸ºæ ·æœ¬(56499 x 1203)
 row.num <- which(rownames(exons_gene_lens) %in% rownames(exprSet3))
 exons_gene_lens2 <- exons_gene_lens[row.num,]
 exprSet4 <- exprSet3[names(exons_gene_lens2),]
 all(names(exons_gene_lens2) == rownames(exprSet4))
 
 ##3.count to FPKM
-mapRead <- colSums2(exprSet4) ###Ä³¸öÑù±¾µÄËùÓĞ»ùÒòreads×ÜºÍ
+mapRead <- colSums2(exprSet4) ###æŸä¸ªæ ·æœ¬çš„æ‰€æœ‰åŸºå› readsæ€»å’Œ
 exprFPKM <- lapply(1:1203, function(i){
-  exprFPKM <- exprSet4[,i]/(exons_gene_lens2[,1] * mapRead[i])  ###±í´ï¾ØÕóÃ¿Ò»ÁĞ¡Âexons¾ØÕóÖĞ¶ÔÓ¦»ùÒòÍâÏÔ×Ó³¤¶È¡Â¸ÃÁĞÖ®ºÍ
+  exprFPKM <- exprSet4[,i]/(exons_gene_lens2[,1] * mapRead[i])  ###è¡¨è¾¾çŸ©é˜µæ¯ä¸€åˆ—Ã·exonsçŸ©é˜µä¸­å¯¹åº”åŸºå› å¤–æ˜¾å­é•¿åº¦Ã·è¯¥åˆ—ä¹‹å’Œ
   return(exprFPKM)
 })
-###×¢Òâ£¬Õë¶ÔÉÏÌõÑ­»·ÄÚµÄº¯Êı£¬µ±ÏàÍ¬³¤¶ÈµÄÁ½ÁĞÊı¾İÏà³ıÊ±£¬Ä¬ÈÏÍ¬Ò»ĞĞµÄÁ½Êı¾İÏà³ı,Èç1:3¡Â1:3 = 1,1,1
+###æ³¨æ„ï¼Œé’ˆå¯¹ä¸Šæ¡å¾ªç¯å†…çš„å‡½æ•°ï¼Œå½“ç›¸åŒé•¿åº¦çš„ä¸¤åˆ—æ•°æ®ç›¸é™¤æ—¶ï¼Œé»˜è®¤åŒä¸€è¡Œçš„ä¸¤æ•°æ®ç›¸é™¤,å¦‚1:3Ã·1:3 = 1,1,1
 exprFPKM2 <- data.frame(do.call(cbind,exprFPKM))
-exprFPKM2 <- exprFPKM2 * 10^9 ###ÎªFPKMÖµ
+exprFPKM2 <- exprFPKM2 * 10^9 ###ä¸ºFPKMå€¼
 
 ##4.FPKM to TPM
-s <- colSums2(as.matrix(exprFPKM2)) ###¼ÆËãÃ¿Ò»¸öÑù±¾ËùÓĞFPKMÖ®ºÍ
+s <- colSums2(as.matrix(exprFPKM2)) ###è®¡ç®—æ¯ä¸€ä¸ªæ ·æœ¬æ‰€æœ‰FPKMä¹‹å’Œ
 exprTPM <- lapply(1:1203, function(i){
-  exprTPM <- exprFPKM2[,i] * 10^6/s[i]  ###»»Ëã
+  exprTPM <- exprFPKM2[,i] * 10^6/s[i]  ###æ¢ç®—
   return(exprTPM)
 })
 exprTPM2 <- data.frame(do.call(cbind,exprTPM))
